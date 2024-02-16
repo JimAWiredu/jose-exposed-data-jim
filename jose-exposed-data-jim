@@ -1,0 +1,35 @@
+rules:
+  - id: jose-exposed-data-jim
+    message: Sensitive data might be exposed in JWT signing operation. Ensure that
+      sensitive data is not included in JWT claims.
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    mode: taint
+    pattern-sources:
+      - pattern: |
+          require('jose')
+          ...
+    pattern-sinks:
+      - pattern-either:
+          - patterns:
+              - pattern-inside: function (...,$INPUT,...) {...}
+              - pattern-either:
+                  - pattern: $JOSE.JWT.sign($INPUT,...)
+                  - pattern: $JWT.sign($INPUT,...)
+          - patterns:
+              - pattern-inside: function $F(...,$INPUT,...) {...}
+              - pattern-either:
+                  - pattern: $JOSE.JWT.sign($INPUT,...)
+                  - pattern: $JWT.sign($INPUT,...)
+    metadata:
+      category: Security
+      cwe:
+        - CWE-200
+      owasp:
+        - A03:2017
+      impact: HIGH
+      confidence: HIGH
+      vulnerability_class:
+        - Sensitive Data Exposure
